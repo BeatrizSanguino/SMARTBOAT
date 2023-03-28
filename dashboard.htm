@@ -1,0 +1,49 @@
+<html>
+
+<head>
+	<title>MQTT CPUtemp</title>
+	<meta charset="utf-8">
+ 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--	<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript">-->
+	<script src="mqttws31.js" type="text/javascript"></script>
+	<script src="plotly.min.js"></script>
+	<link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+	<h2>Robot Remote Controller</h2>
+	<h1>Using MQTT Protocol</h1>
+	<br></br>
+
+	<div id="status1" style="color: red;">Joystick 1</div>
+	<div style="display:flex; width:100%;">
+		<div id="graph" style="max-width:60%; float:left; display: block;"></div>	
+		<div style="width:40%; float:left; display: block;">
+			<!--<div>
+				<button id="forward-btn" onmousedown="forward()" onmouseup="stop()">FORWARD</br><span style="font-size:50px">&#8679;</span></button>
+			</div>
+			<div>
+				<button id="left-btn" onmousedown="left()" onmouseup="stop()">LEFT</br><span style="font-size:50px">&#8678;</span></button>
+				<button id="right-btn" onmousedown="right()" onmouseup="stop()">RIGHT</br><span style="font-size:50px">&#8680;</span></button>
+			</div>
+			<div>
+				<button id="backward-btn" onmousedown="backward()" onmouseup="stop()"><span style="font-size:50px">&#8681;</span></br>BACKWARD</button>
+			</div>-->
+			<div style="width: 50%; height: 50% ; position: relative; left: 50px; top:50px;">
+				<div style="position: absolute; left:32px; top:32px;">
+				<img src="images/joystick-base.png"/>
+				</div>
+				<div id="stick1" style="position: absolute; left:64px; top:64px;">
+				<img src="images/joystick-red.png"/>		
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--<div id="output">-->
+
+	</div>
+	<script src="index.js"></script>
+</body>
+
+</html>
