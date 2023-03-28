@@ -13,7 +13,7 @@ function onConnect() {
 
     console.log("Connected ");
     mqtt.subscribe("robot/sensor_distance",{qos: 2});
-
+    mqtt.subscribe("robot/GPS_position",{qos: 2});
     //message = new Paho.MQTT.Message("connected");
     //message.destinationName = "robot/motor/action";
     //mqtt.send(message);
@@ -98,32 +98,36 @@ function stop() {
 
 function onMessageArrived(message) {
     //out_msg = "Topic: " +",   " + msg.payloadString
-    //var topic = message.destinationName;
-    //var payload = message.payloadString;
+    var topic = message.destinationName;
+    var payload = message.payloadString;
     console.log(message.payloadString)
     
+    if (topic=="robot/sensor_distance"){
+        distance = parseFloat(payload)
+        console.log(distance)
+        //Plotly.update('graph', {'y': [[distance]]}, {}, [0])
+    
+        Plotly.extendTraces('graph', {
+            x: [[count_graph]],
+            y: [[distance]]
+        }, [0]);
+        count_graph=count_graph+1
+        cnt++;
+   
+        if(cnt > 30) {
+            Plotly.relayout('graph',{
+                xaxis: {
+                          range: [cnt-30,cnt]
+                    }    
+            });
+        }   
+    } else if (topic=="robot/GPS_position") {
+        position = payload;
+        document.getElementById("coord").innerHTML = position;
+    }
     //let div = document.getElementById('output');
     //div.innerHTML += out_msg + "<br>"
-    distance = parseFloat(message.payloadString)
-    console.log(distance)
-    //Plotly.update('graph', {'y': [[distance]]}, {}, [0])
     
-    
-    Plotly.extendTraces('graph', {
-        x: [[count_graph]],
-        y: [[distance]]
-      }, [0]);
-    count_graph=count_graph+1
-    cnt++;
-   
-    if(cnt > 10) {
-        Plotly.relayout('graph',{
-            xaxis: {
-                      range: [cnt-10,cnt]
-                   }
-       });
-    }
-
 }
 
 
@@ -132,8 +136,10 @@ function MQTTconnect() {
 
     //let x = Math.floor(Math.random() * 10000);
     //let cname = "orderform-" + x;
+    
+    var client_id_name = "robot_controller".concat(Math.random().toString);
 
-    mqtt = new Paho.MQTT.Client(host, port, "controller_robot_5_");
+    mqtt = new Paho.MQTT.Client(host, port, client_id_name);
 
     let options = {
         timeout: 3,
@@ -322,7 +328,7 @@ class JoystickController
 var t0 = new Date()
 var freq = 10
 
-let joystick1 = new JoystickController("stick1", 64, 8);
+let joystick1 = new JoystickController("stick1", 128, 8);
 
 function update()
 {
@@ -335,6 +341,7 @@ function loop()
 	update();
 }
 
+let position;
 
 MQTTconnect()
 
@@ -349,10 +356,10 @@ var trace = {
 var layout = {
     title: 'Measurement from the distance sensor',
     xaxis: {
-      title: 'X-axis'
+      title: 'Iteration number'
     },
     yaxis: {
-      title: 'Y-axis'
+      title: 'Distance [m]'
     }
   };
 
