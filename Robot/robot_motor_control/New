@@ -1,2 +1,0 @@
-cd Robot/robot_motor_control
-python robot_publish_distance.py & python robot_subscribe_control.py & python GPS-Human-Readable-Final.py
