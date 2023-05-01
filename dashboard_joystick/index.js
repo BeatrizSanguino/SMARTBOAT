@@ -7,6 +7,12 @@ let M1 =0;
 let M2 = 0;
 let res = {x:0,y:0};
 let d = 0;
+// Declare a global array to store all the distances
+let distances = [];
+let count_graph = 0;
+let cnt = 0;
+let y_range = [];
+document.getElementById("coord").innerHTML = result
 
 function onConnect() {
     // Once a connection has been made, make a subscription and send a message.
@@ -15,115 +21,58 @@ function onConnect() {
     mqtt.subscribe("robot/sensor_distance",{qos: 2});
     mqtt.subscribe("robot/GPS_position",{qos: 2});
     //message = new Paho.MQTT.Message("connected");
-    //message.destinationName = "robot/motor/action";
+    //message.destinationName = "robot/motor_action";
     //mqtt.send(message);
 
 }
-
-/*function forward() {
-    console.log("forward");
-    message = new Paho.MQTT.Message("forward");
-    message.destinationName = "robot/motor/action";
-    message.qos = 2;
-    mqtt.send(message);
-
-    //setTimeout(function() {
-    //    stop();
-    //  }, tt);
-
-    //let div = document.getElementById('output');
-    //div.textContent = " ";
-
-}
-
-function backward() {
-    console.log("backward");
-    message = new Paho.MQTT.Message("backward");
-    message.destinationName = "robot/motor/action";
-    message.qos = 2;
-    message.retained = false;
-    mqtt.send(message);
-
-    //setTimeout(function() {
-    //    stop();
-    //  }, tt);
-
-    //let div = document.getElementById('output');
-    //div.textContent = " ";
-
-}
-
-function left() {
-    console.log("left");
-    message = new Paho.MQTT.Message("left");
-    message.destinationName = "robot/motor/action";
-    message.qos = 2;
-    message.retained = false;
-    mqtt.send(message);
-
-    //setTimeout(function() {
-    //    stop();
-    // }, tt);
-
-    //let div = document.getElementById('output');
-    //div.textContent = " ";
-
-}
-
-function right() {
-    console.log("right");
-    message = new Paho.MQTT.Message("right");
-    message.destinationName = "robot/motor/action";
-    message.qos = 2;
-    message.retained = false;
-    mqtt.send(message);
-
-    //setTimeout(function() {
-    //    stop();
-    //  }, tt);
-
-    //let div = document.getElementById('output');
-    //div.textContent = " ";
-
-}
-
-function stop() {
-    message = new Paho.MQTT.Message("stop");
-    message.destinationName = "robot/motor/action";
-    message.qos = 2;
-    message.retained = false;
-    mqtt.send(message);
-    console.log("stop");
-}*/
-
 function onMessageArrived(message) {
-    //out_msg = "Topic: " +",   " + msg.payloadString
+    // Extract the topic and payload from the incoming message
     var topic = message.destinationName;
     var payload = message.payloadString;
+
+    // Log the payload for debugging purposes
     console.log(message.payloadString)
     
     if (topic=="robot/sensor_distance"){
         distance = parseFloat(payload)
         console.log(distance)
-        //Plotly.update('graph', {'y': [[distance]]}, {}, [0])
-    
+        
+        // Append the distance value to the global array
+        distances.push(distance);
+        
+        // Calculate the range of the y-axis
+        //let y_range = [Math.min(...distances) * 0.9, Math.max(...distances) * 1.1];
+
         Plotly.extendTraces('graph', {
             x: [[count_graph]],
             y: [[distance]]
         }, [0]);
-        count_graph=count_graph+1
-        cnt++;
-   
-        if(cnt > 30) {
-            Plotly.relayout('graph',{
-                xaxis: {
-                          range: [cnt-30,cnt]
-                    }    
+
+        // Update the range of the y-axis if more than 30 data points have been received
+        if (cnt > 30) {
+            y_range = [Math.min(...distances.slice(-30)) * 0.9, Math.max(...distances.slice(-30)) * 1.1];
+            Plotly.relayout('graph', {
+                xaxis: {range: [cnt-30, cnt]},
+                yaxis: {range: y_range}
             });
-        }   
+        } else {
+            Plotly.relayout('graph', {
+                xaxis: {range: [0, cnt+1]},
+                yaxis: {range: [Math.min(...distances) * 0.9, Math.max(...distances) * 1.1]}
+            });
+        }
+        
+        // Update the count of data points
+        count_graph++;
+        cnt++;  
+
     } else if (topic=="robot/GPS_position") {
-        position = payload;
-        document.getElementById("coord").innerHTML = position;
+        //position = payload;
+        arr = str.split(", ");
+        console.log(arr)
+
+        result = arr[0] + "°, " + arr[1] + "°";
+        document.getElementById("coord").innerHTML = result;
     }
     //let div = document.getElementById('output');
     //div.innerHTML += out_msg + "<br>"
@@ -153,7 +102,7 @@ function MQTTconnect() {
 
 class JoystickController
 {
-	// based on: https://www.cssscript.com/touch-joystick-controller/#google_vignette
+	// adapted from: https://www.cssscript.com/touch-joystick-controller/#google_vignette
     // stickID: ID of HTML element (representing joystick) that will be dragged
 	// maxDistance: maximum amount joystick can move in any direction
 	// deadzone: joystick must move at least this amount from origin to register value change
@@ -242,11 +191,12 @@ class JoystickController
                 var M2_string = res.M2.toString();
                 var message_content = M1_string.concat(',',M2_string)
                 var message = new Paho.MQTT.Message(message_content);
-                message.destinationName = "robot/motor/action";
+                message.destinationName = "robot/motor_action";
                 message.qos = 2;
                 message.retained = false;
                 mqtt.send(message);
                 console.log(message_content);
+                console.log(message);
                 t0 = new Date()}
             
 		  }
@@ -272,11 +222,12 @@ class JoystickController
             var M2_string = res.M2.toString();
             var message_content = M1_string.concat(',',M2_string)
             var message = new Paho.MQTT.Message(message_content);
-            message.destinationName = "robot/motor/action";
+            message.destinationName = "robot/motor_action";
             message.qos = 2;
             message.retained = false;
             mqtt.send(message);
             console.log(message_content);
+            console.log(message);
 
             
 		}
@@ -285,27 +236,27 @@ class JoystickController
         {
             if (x<0 && y>=0 ){
                 var d = Math.sqrt(Math.abs(x)**2 + Math.abs(y)**2)
-                var alpha=Math.atan2(y, Math.abs(x));
-                var M1 = d*( -(2/(Math.PI/2))*alpha + 1);
-                var M2 = d*(-1);
+                var alpha=Math.atan2(Math.abs(x),y);
+                var M2 = d*( -(2/(Math.PI/2))*alpha + 1);
+                var M1 = d*(1);
             }
             else if (x>0 && y<=0){
                 var d = Math.sqrt(Math.abs(x)**2 + Math.abs(y)**2)
                 var alpha=Math.atan2(Math.abs(y), x);
-                var M1 = d*((2/(Math.PI/2))*alpha - 1);
-                var M2 = d*(1);
+                var M2 = d*(-(2/(Math.PI/2))*alpha + 1);
+                var M1 = d*(-1);
             }
             else if (x>=0 && y>0){
                 var d = Math.sqrt(Math.abs(x)**2 + Math.abs(y)**2)
                 var alpha=Math.atan2(y, x);
-                var M2 = d*(-(2/(Math.PI/2))*alpha + 1);
-                var M1=d*(-1);
+                var M1 = d*((2/(Math.PI/2))*alpha - 1);
+                var M2=d*(1);
             }
             else if (x<=0 && y<0){
                 var d = Math.sqrt(Math.abs(x)**2 + Math.abs(y)**2)
                 var alpha=Math.atan2(Math.abs(y), Math.abs(x));
-                var M2 = d*((2/(Math.PI/2))*alpha - 1);
-                var M1=d*(1);
+                var M1 = d*((2/(Math.PI/2))*alpha - 1);
+                var M2=d*(-1);
             }
             else if (x==0 && y==0){
                 var alpha = 0;
@@ -330,15 +281,15 @@ var freq = 10
 
 let joystick1 = new JoystickController("stick1", 128, 8);
 
-function update()
-{
-	document.getElementById("status1").innerText = "Joystick 1: " + JSON.stringify(joystick1.value);
-}
+//function update()
+//{
+//	document.getElementById("status1").innerText = "Joystick 1: " + JSON.stringify(joystick1.value);
+//}
 
 function loop()
 {
 	requestAnimationFrame(loop);
-	update();
+	//update();
 }
 
 let position;
@@ -346,27 +297,14 @@ let position;
 MQTTconnect()
 
 var distance
-var count_graph = 0
-var trace = {
-    x: [],
-    y: [],
-    mode: 'lines'
-  };
+var trace = {x: [],y: [],mode: 'lines'};
   
 var layout = {
     title: 'Measurement from the distance sensor',
-    xaxis: {
-      title: 'Iteration number'
-    },
-    yaxis: {
-      title: 'Distance [m]'
-    }
-  };
-
-var cnt = 0;
+    xaxis: {title: 'Iteration number'},
+    yaxis: {title: 'Distance [m]'}};
 
 Plotly.newPlot('graph', [trace], layout);
-  
 
 loop();
 
