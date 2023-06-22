@@ -12,7 +12,7 @@ let distances = [];
 let count_graph = 0;
 let cnt = 0;
 let y_range = [];
-document.getElementById("coord").innerHTML = result
+//document.getElementById("coord").innerHTML = result
 
 function onConnect() {
     // Once a connection has been made, make a subscription and send a message.
